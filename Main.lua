@@ -73,7 +73,7 @@ TAB_VISUAL.BorderSizePixel = 0
 TAB_VISUAL.Position = UDim2.new(0.0250000004, 0, 0.0780000016, 0)
 TAB_VISUAL.Size = UDim2.new(0.949999988, 0, 0.120999999, 0)
 TAB_VISUAL.ZIndex = 2
-TAB_VISUAL.Font = Enum.Font.Jura
+TAB_VISUAL.Font = Enum.Font.SciFi
 TAB_VISUAL.Text = "Visual"
 TAB_VISUAL.TextColor3 = Color3.fromRGB(190, 190, 190)
 TAB_VISUAL.TextSize = 34.000
@@ -89,7 +89,7 @@ TAB_MOVEMENT.BorderSizePixel = 0
 TAB_MOVEMENT.Position = UDim2.new(0.0250000004, 0, 0.206, 0)
 TAB_MOVEMENT.Size = UDim2.new(0.949999988, 0, 0.120999999, 0)
 TAB_MOVEMENT.ZIndex = 2
-TAB_MOVEMENT.Font = Enum.Font.Jura
+TAB_MOVEMENT.Font = Enum.Font.SciFi
 TAB_MOVEMENT.Text = "Movement"
 TAB_MOVEMENT.TextColor3 = Color3.fromRGB(190, 190, 190)
 TAB_MOVEMENT.TextSize = 34.000
@@ -114,7 +114,7 @@ CheatName.BorderColor3 = Color3.fromRGB(0, 0, 0)
 CheatName.BorderSizePixel = 0
 CheatName.Position = UDim2.new(1.00627512e-05, 0, 0.079491362, 0)
 CheatName.Size = UDim2.new(0, 180, 0, 45)
-CheatName.Font = Enum.Font.Jura
+CheatName.Font = Enum.Font.SciFi
 CheatName.Text = "Arcide.cc"
 CheatName.TextColor3 = Color3.fromRGB(190, 190, 190)
 CheatName.TextSize = 45.000
@@ -180,7 +180,7 @@ BTN_NOCLIP.Position = UDim2.new(0.0109999999, 0, 0.0390000008, 0)
 BTN_NOCLIP.Size = UDim2.new(0, 100, 0, 50)
 BTN_NOCLIP.Visible = false
 BTN_NOCLIP.ZIndex = 2
-BTN_NOCLIP.Font = Enum.Font.Jura
+BTN_NOCLIP.Font = Enum.Font.SciFi
 BTN_NOCLIP.Text = "NoClip"
 BTN_NOCLIP.TextColor3 = Color3.fromRGB(190, 190, 190)
 BTN_NOCLIP.TextSize = 16.000
@@ -198,7 +198,7 @@ BTN_ITEMESP.BorderSizePixel = 0
 BTN_ITEMESP.Position = UDim2.new(0.0109999999, 0, 0.0390000008, 0)
 BTN_ITEMESP.Size = UDim2.new(0, 100, 0, 50)
 BTN_ITEMESP.ZIndex = 2
-BTN_ITEMESP.Font = Enum.Font.Jura
+BTN_ITEMESP.Font = Enum.Font.SciFi
 BTN_ITEMESP.Text = "Item ESP"
 BTN_ITEMESP.TextColor3 = Color3.fromRGB(190, 190, 190)
 BTN_ITEMESP.TextSize = 16.000
@@ -213,7 +213,7 @@ BTN_PLAYERESP.BorderSizePixel = 0
 BTN_PLAYERESP.Position = UDim2.new(0.155000001, 0, 0.0390000008, 0)
 BTN_PLAYERESP.Size = UDim2.new(0, 100, 0, 50)
 BTN_PLAYERESP.ZIndex = 2
-BTN_PLAYERESP.Font = Enum.Font.Jura
+BTN_PLAYERESP.Font = Enum.Font.SciFi
 BTN_PLAYERESP.Text = "Player ESP"
 BTN_PLAYERESP.TextColor3 = Color3.fromRGB(190, 190, 190)
 BTN_PLAYERESP.TextSize = 16.000
@@ -228,7 +228,7 @@ BTN_ALWAYSDAY.BorderSizePixel = 0
 BTN_ALWAYSDAY.Position = UDim2.new(0.298999995, 0, 0.0390000008, 0)
 BTN_ALWAYSDAY.Size = UDim2.new(0, 100, 0, 50)
 BTN_ALWAYSDAY.ZIndex = 2
-BTN_ALWAYSDAY.Font = Enum.Font.Jura
+BTN_ALWAYSDAY.Font = Enum.Font.SciFi
 BTN_ALWAYSDAY.Text = "Always Day"
 BTN_ALWAYSDAY.TextColor3 = Color3.fromRGB(190, 190, 190)
 BTN_ALWAYSDAY.TextSize = 16.000
@@ -243,7 +243,7 @@ BTN_FOVCHANGE.BorderSizePixel = 0
 BTN_FOVCHANGE.Position = UDim2.new(0.442999989, 0, 0.0979999974, 0)
 BTN_FOVCHANGE.Size = UDim2.new(0, 100, 0, 50)
 BTN_FOVCHANGE.ZIndex = 2
-BTN_FOVCHANGE.Font = Enum.Font.Jura
+BTN_FOVCHANGE.Font = Enum.Font.SciFi
 BTN_FOVCHANGE.Text = "Fov Change"
 BTN_FOVCHANGE.TextColor3 = Color3.fromRGB(190, 190, 190)
 BTN_FOVCHANGE.TextSize = 16.000
@@ -272,7 +272,7 @@ BTN_TIMECHANGE.BorderSizePixel = 0
 BTN_TIMECHANGE.Position = UDim2.new(0.442999989, 0, 0.0390000008, 0)
 BTN_TIMECHANGE.Size = UDim2.new(0, 100, 0, 50)
 BTN_TIMECHANGE.ZIndex = 2
-BTN_TIMECHANGE.Font = Enum.Font.Jura
+BTN_TIMECHANGE.Font = Enum.Font.SciFi
 BTN_TIMECHANGE.Text = "Time Change"
 BTN_TIMECHANGE.TextColor3 = Color3.fromRGB(190, 190, 190)
 BTN_TIMECHANGE.TextSize = 16.000
@@ -295,7 +295,7 @@ UICorner_14.Parent = TimeInput
 
 -- Scripts:
 
-local function RMSDVU_fake_script() -- TAB_VISUAL.VisualSCRIPT 
+local function WRXZMWR_fake_script() -- TAB_VISUAL.VisualSCRIPT 
 	local script = Instance.new('LocalScript', TAB_VISUAL)
 
 	local VisualTab = script.Parent
@@ -324,8 +324,8 @@ local function RMSDVU_fake_script() -- TAB_VISUAL.VisualSCRIPT
 	end)
 	
 end
-coroutine.wrap(RMSDVU_fake_script)()
-local function STLJYVI_fake_script() -- TAB_MOVEMENT.MovementSCRIPT 
+coroutine.wrap(WRXZMWR_fake_script)()
+local function GAYCPV_fake_script() -- TAB_MOVEMENT.MovementSCRIPT 
 	local script = Instance.new('LocalScript', TAB_MOVEMENT)
 
 	local VisualTab = script.Parent
@@ -354,8 +354,8 @@ local function STLJYVI_fake_script() -- TAB_MOVEMENT.MovementSCRIPT
 	end)
 	
 end
-coroutine.wrap(STLJYVI_fake_script)()
-local function SYZCMA_fake_script() -- BTN_NOCLIP.FUNC_NOCLIP 
+coroutine.wrap(GAYCPV_fake_script)()
+local function VJGAU_fake_script() -- BTN_NOCLIP.FUNC_NOCLIP 
 	local script = Instance.new('LocalScript', BTN_NOCLIP)
 
 	local UIS = game:GetService("UserInputService")
@@ -439,8 +439,8 @@ local function SYZCMA_fake_script() -- BTN_NOCLIP.FUNC_NOCLIP
 	
 	
 end
-coroutine.wrap(SYZCMA_fake_script)()
-local function KBEKSD_fake_script() -- BTN_ITEMESP.FUNC_ITEMESP 
+coroutine.wrap(VJGAU_fake_script)()
+local function VXANFBS_fake_script() -- BTN_ITEMESP.FUNC_ITEMESP 
 	local script = Instance.new('LocalScript', BTN_ITEMESP)
 
 	local button = script.Parent
@@ -560,8 +560,8 @@ local function KBEKSD_fake_script() -- BTN_ITEMESP.FUNC_ITEMESP
 	
 	
 end
-coroutine.wrap(KBEKSD_fake_script)()
-local function TXHNC_fake_script() -- BTN_PLAYERESP.FUNC_PLAYERESP 
+coroutine.wrap(VXANFBS_fake_script)()
+local function ISFMBF_fake_script() -- BTN_PLAYERESP.FUNC_PLAYERESP 
 	local script = Instance.new('LocalScript', BTN_PLAYERESP)
 
 	local RunService = game:GetService("RunService")
@@ -645,8 +645,8 @@ local function TXHNC_fake_script() -- BTN_PLAYERESP.FUNC_PLAYERESP
 	end)
 	
 end
-coroutine.wrap(TXHNC_fake_script)()
-local function XQEVE_fake_script() -- BTN_ALWAYSDAY.FUNC_ALWAYSDAY 
+coroutine.wrap(ISFMBF_fake_script)()
+local function EMLLWBM_fake_script() -- BTN_ALWAYSDAY.FUNC_ALWAYSDAY 
 	local script = Instance.new('LocalScript', BTN_ALWAYSDAY)
 
 	local btn = script.Parent
@@ -692,8 +692,8 @@ local function XQEVE_fake_script() -- BTN_ALWAYSDAY.FUNC_ALWAYSDAY
 	end)
 	
 end
-coroutine.wrap(XQEVE_fake_script)()
-local function FKXKYOW_fake_script() -- BTN_FOVCHANGE.FUNC_FOVCHANGE 
+coroutine.wrap(EMLLWBM_fake_script)()
+local function ONHT_fake_script() -- BTN_FOVCHANGE.FUNC_FOVCHANGE 
 	local script = Instance.new('LocalScript', BTN_FOVCHANGE)
 
 	local btn = script.Parent
@@ -708,8 +708,8 @@ local function FKXKYOW_fake_script() -- BTN_FOVCHANGE.FUNC_FOVCHANGE
 	end)
 	
 end
-coroutine.wrap(FKXKYOW_fake_script)()
-local function MKZCFJG_fake_script() -- BTN_TIMECHANGE.FUNC_TIMECHANGE 
+coroutine.wrap(ONHT_fake_script)()
+local function ZBVRPRJ_fake_script() -- BTN_TIMECHANGE.FUNC_TIMECHANGE 
 	local script = Instance.new('LocalScript', BTN_TIMECHANGE)
 
 	local btn = script.Parent
@@ -724,8 +724,8 @@ local function MKZCFJG_fake_script() -- BTN_TIMECHANGE.FUNC_TIMECHANGE
 	end)
 	
 end
-coroutine.wrap(MKZCFJG_fake_script)()
-local function ULHO_fake_script() -- ScreenGui.MENUKEYBIND 
+coroutine.wrap(ZBVRPRJ_fake_script)()
+local function ZLVH_fake_script() -- ScreenGui.MENUKEYBIND 
 	local script = Instance.new('LocalScript', ScreenGui)
 
 	local UIS = game:GetService("UserInputService")
@@ -739,4 +739,4 @@ local function ULHO_fake_script() -- ScreenGui.MENUKEYBIND
 			end
 		end)
 end
-coroutine.wrap(ULHO_fake_script)()
+coroutine.wrap(ZLVH_fake_script)()
