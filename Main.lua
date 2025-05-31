@@ -1,742 +1,542 @@
--- Gui to Lua
--- Version: 3.2
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
--- Instances:
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Camera = workspace.CurrentCamera
+local TextService = game:GetService("TextService")
 
-local ScreenGui = Instance.new("ScreenGui")
-local MENU = Instance.new("Frame")
-local TABS = Instance.new("Frame")
-local UICorner = Instance.new("UICorner")
-local TAB_VISUAL = Instance.new("TextButton")
-local UICorner_2 = Instance.new("UICorner")
-local TAB_MOVEMENT = Instance.new("TextButton")
-local UICorner_3 = Instance.new("UICorner")
-local TOP = Instance.new("Frame")
-local CheatName = Instance.new("TextLabel")
-local UICorner_4 = Instance.new("UICorner")
-local Version = Instance.new("TextLabel")
-local Version_2 = Instance.new("TextLabel")
-local UICorner_5 = Instance.new("UICorner")
-local ScrollingFrame = Instance.new("ScrollingFrame")
-local UICorner_6 = Instance.new("UICorner")
-local Movement = Instance.new("Folder")
-local BTN_NOCLIP = Instance.new("TextButton")
-local UICorner_7 = Instance.new("UICorner")
-local Visual = Instance.new("Folder")
-local BTN_ITEMESP = Instance.new("TextButton")
-local UICorner_8 = Instance.new("UICorner")
-local BTN_PLAYERESP = Instance.new("TextButton")
-local UICorner_9 = Instance.new("UICorner")
-local BTN_ALWAYSDAY = Instance.new("TextButton")
-local UICorner_10 = Instance.new("UICorner")
-local BTN_FOVCHANGE = Instance.new("TextButton")
-local UICorner_11 = Instance.new("UICorner")
-local FOVInput = Instance.new("TextBox")
-local UICorner_12 = Instance.new("UICorner")
-local BTN_TIMECHANGE = Instance.new("TextButton")
-local UICorner_13 = Instance.new("UICorner")
-local TimeInput = Instance.new("TextBox")
-local UICorner_14 = Instance.new("UICorner")
+local ChamsFillColor
+local ChamsOutlineColor
+local ChamsUpdaterRunning = false
+local CharacterConnections = {}
+local PlayerConnection
 
---Properties:
+local ESPEnabled = false
+local ESPDistanceEnabled = false
+local ESPHealthEnabled = false
+local ESPNameEnabled = false
+local ESPHealthGradientStart = Color3.fromRGB(255, 0, 0)
+local ESPHealthGradientEnd = Color3.fromRGB(0, 255, 0)
+local ESPDistanceMax = 1000
+local ESPPlayers = {}
 
-ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+local Window = Fluent:CreateWindow({
+    Title = "TRIVIAL " .. Fluent.Version,
+    SubTitle = "by wienn",
+    TabWidth = 130,
+    Size = UDim2.fromOffset(1000, 600),
+    Acrylic = false,
+    Theme = "Darker",
+    MinimizeKey = Enum.KeyCode.K
+})
 
-MENU.Name = "MENU"
-MENU.Parent = ScreenGui
-MENU.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-MENU.BackgroundTransparency = 1.000
-MENU.BorderColor3 = Color3.fromRGB(20, 20, 20)
-MENU.BorderSizePixel = 0
-MENU.Position = UDim2.new(0.211723641, 0, 0.18837063, 0)
-MENU.Size = UDim2.new(0.575999975, 0, 0.623000026, 0)
-MENU.ZIndex = 0
+local Tabs = {
+    Combat = Window:AddTab({ Title = "Combat", Icon = "swords" }),
+    Visuals = Window:AddTab({ Title = "Visuals", Icon = "paintbrush" }),
+    Movement = Window:AddTab({ Title = "Movement", Icon = "accessibility" }),
+    World = Window:AddTab({ Title = "World", Icon = "tree-pine" }),
+    Misc = Window:AddTab({ Title = "Misc", Icon = "puzzle" }),
+    Settings = Window:AddTab({ Title = "Settings", Icon = "user-cog" })
+}
 
-TABS.Name = "TABS"
-TABS.Parent = MENU
-TABS.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-TABS.BackgroundTransparency = 0.100
-TABS.BorderColor3 = Color3.fromRGB(0, 0, 0)
-TABS.BorderSizePixel = 0
-TABS.Position = UDim2.new(0, 0, 0.0289999992, 0)
-TABS.Size = UDim2.new(0.225549668, 0, 0.971381068, 0)
+local Options = Fluent.Options
 
-UICorner.CornerRadius = UDim.new(0, 25)
-UICorner.Parent = TABS
+local aimbotEnabled = false
+local aimFOV = 100
+local aimStrength = 1
+local aimSmoothness = 0.1
+local aimPart = "HumanoidRootPart" -- Изменено с Head на HumanoidRootPart для лучшего таргета
+local aimColor = Color3.fromRGB(255, 0, 0)
+local aiming = false
 
-TAB_VISUAL.Name = "TAB_VISUAL"
-TAB_VISUAL.Parent = TABS
-TAB_VISUAL.BackgroundColor3 = Color3.fromRGB(33, 33, 33)
-TAB_VISUAL.BorderColor3 = Color3.fromRGB(0, 0, 0)
-TAB_VISUAL.BorderSizePixel = 0
-TAB_VISUAL.Position = UDim2.new(0.0250000004, 0, 0.0780000016, 0)
-TAB_VISUAL.Size = UDim2.new(0.949999988, 0, 0.120999999, 0)
-TAB_VISUAL.ZIndex = 2
-TAB_VISUAL.Font = Enum.Font.SciFi
-TAB_VISUAL.Text = "Visual"
-TAB_VISUAL.TextColor3 = Color3.fromRGB(190, 190, 190)
-TAB_VISUAL.TextSize = 34.000
+local FOVCircle = Drawing.new("Circle")
+FOVCircle.Thickness = 1
+FOVCircle.NumSides = 100
+FOVCircle.Filled = false
+FOVCircle.Transparency = 0.5
+FOVCircle.Visible = false
 
-UICorner_2.CornerRadius = UDim.new(0, 10)
-UICorner_2.Parent = TAB_VISUAL
+Tabs.Combat:AddToggle("T_Aimbot", { Title = "Enable Aimbot", Default = false }):OnChanged(function(val)
+    aimbotEnabled = val
+    FOVCircle.Visible = val
+    if not val then aiming = false end
+end)
 
-TAB_MOVEMENT.Name = "TAB_MOVEMENT"
-TAB_MOVEMENT.Parent = TABS
-TAB_MOVEMENT.BackgroundColor3 = Color3.fromRGB(33, 33, 33)
-TAB_MOVEMENT.BorderColor3 = Color3.fromRGB(0, 0, 0)
-TAB_MOVEMENT.BorderSizePixel = 0
-TAB_MOVEMENT.Position = UDim2.new(0.0250000004, 0, 0.206, 0)
-TAB_MOVEMENT.Size = UDim2.new(0.949999988, 0, 0.120999999, 0)
-TAB_MOVEMENT.ZIndex = 2
-TAB_MOVEMENT.Font = Enum.Font.SciFi
-TAB_MOVEMENT.Text = "Movement"
-TAB_MOVEMENT.TextColor3 = Color3.fromRGB(190, 190, 190)
-TAB_MOVEMENT.TextSize = 34.000
+Tabs.Combat:AddSlider("S_FOV", {
+    Title = "FOV",
+    Description = "FOV radius",
+    Default = 100,
+    Min = 10,
+    Max = 500,
+    Rounding = 0
+}):OnChanged(function(val)
+    aimFOV = val
+    FOVCircle.Radius = val
+end)
 
-UICorner_3.CornerRadius = UDim.new(0, 10)
-UICorner_3.Parent = TAB_MOVEMENT
+local aimPrediction = 0.165
 
-TOP.Name = "TOP"
-TOP.Parent = MENU
-TOP.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-TOP.BorderColor3 = Color3.fromRGB(0, 0, 0)
-TOP.BorderSizePixel = 0
-TOP.Position = UDim2.new(-9.98270625e-05, 0, -0.00129097071, 0)
-TOP.Size = UDim2.new(0.99999994, 0, 0.100000061, 0)
-TOP.ZIndex = 2
+Tabs.Combat:AddSlider("S_Predict", {
+    Title = "Prediction",
+    Description = "Aim lead prediction factor",
+    Default = 0.165,
+    Min = 0,
+    Max = 1,
+    Rounding = 3
+}):OnChanged(function(val)
+    aimPrediction = val
+end)
 
-CheatName.Name = "CheatName"
-CheatName.Parent = TOP
-CheatName.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-CheatName.BackgroundTransparency = 1.000
-CheatName.BorderColor3 = Color3.fromRGB(0, 0, 0)
-CheatName.BorderSizePixel = 0
-CheatName.Position = UDim2.new(1.00627512e-05, 0, 0.079491362, 0)
-CheatName.Size = UDim2.new(0, 180, 0, 45)
-CheatName.Font = Enum.Font.SciFi
-CheatName.Text = "Arcide.cc"
-CheatName.TextColor3 = Color3.fromRGB(190, 190, 190)
-CheatName.TextSize = 45.000
-CheatName.TextWrapped = true
+Tabs.Combat:AddSlider("S_Strength", {
+    Title = "Strength",
+    Description = "Cursor speed",
+    Default = 1,
+    Min = 0.1,
+    Max = 5,
+    Rounding = 1
+}):OnChanged(function(val)
+    aimStrength = val
+end)
 
-UICorner_4.CornerRadius = UDim.new(0, 15)
-UICorner_4.Parent = TOP
+Tabs.Combat:AddSlider("S_Smooth", {
+    Title = "Smoothness",
+    Description = "Aiming smoothness",
+    Default = 0.1,
+    Min = 0.01,
+    Max = 1,
+    Rounding = 2
+}):OnChanged(function(val)
+    aimSmoothness = val
+end)
 
-Version.Name = "Version"
-Version.Parent = TOP
-Version.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-Version.BackgroundTransparency = 1.000
-Version.BorderColor3 = Color3.fromRGB(0, 0, 0)
-Version.BorderSizePixel = 0
-Version.Position = UDim2.new(0.85307765, 0, 0.299099565, 0)
-Version.Size = UDim2.new(0, 180, 0, 45)
-Version.Font = Enum.Font.Michroma
-Version.Text = "v1.2.0"
-Version.TextColor3 = Color3.fromRGB(190, 190, 190)
-Version.TextSize = 14.000
-Version.TextWrapped = true
+Tabs.Combat:AddColorpicker("Color_AimFOV", {
+    Title = "FOV Color",
+    Default = Color3.fromRGB(50, 19, 100)
+}):OnChanged(function(val)
+    aimColor = val
+    FOVCircle.Color = val
+end)
 
-Version_2.Name = "Version"
-Version_2.Parent = TOP
-Version_2.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-Version_2.BackgroundTransparency = 1.000
-Version_2.BorderColor3 = Color3.fromRGB(0, 0, 0)
-Version_2.BorderSizePixel = 0
-Version_2.Position = UDim2.new(0.875559688, 0, -0.000366168038, 0)
-Version_2.Size = UDim2.new(0, 99, 0, 34)
-Version_2.Font = Enum.Font.Michroma
-Version_2.Text = "[U] Menu Bind"
-Version_2.TextColor3 = Color3.fromRGB(190, 190, 190)
-Version_2.TextSize = 14.000
-Version_2.TextWrapped = true
+Tabs.Combat:AddDropdown("Drop_AimPart", {
+    Title = "AimPoint",
+    Values = {"Head", "HumanoidRootPart", "UpperTorso"},
+    Multi = false,
+    Default = "HumanoidRootPart"
+}):OnChanged(function(val)
+    aimPart = val
+end)
 
-UICorner_5.CornerRadius = UDim.new(0, 25)
-UICorner_5.Parent = MENU
-
-ScrollingFrame.Parent = MENU
-ScrollingFrame.Active = true
-ScrollingFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-ScrollingFrame.BackgroundTransparency = 0.200
-ScrollingFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
-ScrollingFrame.BorderSizePixel = 0
-ScrollingFrame.Position = UDim2.new(0.224730387, 0, 0.0286190156, 0)
-ScrollingFrame.Size = UDim2.new(0.77516973, 0, 0.971381068, 0)
-ScrollingFrame.ZIndex = 0
-ScrollingFrame.ScrollBarThickness = 10
-
-UICorner_6.CornerRadius = UDim.new(0, 25)
-UICorner_6.Parent = ScrollingFrame
-
-Movement.Name = "Movement"
-Movement.Parent = ScrollingFrame
-
-BTN_NOCLIP.Name = "BTN_NOCLIP"
-BTN_NOCLIP.Parent = Movement
-BTN_NOCLIP.BackgroundColor3 = Color3.fromRGB(38, 38, 38)
-BTN_NOCLIP.BorderColor3 = Color3.fromRGB(0, 0, 0)
-BTN_NOCLIP.BorderSizePixel = 0
-BTN_NOCLIP.Position = UDim2.new(0.0109999999, 0, 0.0390000008, 0)
-BTN_NOCLIP.Size = UDim2.new(0, 100, 0, 50)
-BTN_NOCLIP.Visible = false
-BTN_NOCLIP.ZIndex = 2
-BTN_NOCLIP.Font = Enum.Font.SciFi
-BTN_NOCLIP.Text = "NoClip"
-BTN_NOCLIP.TextColor3 = Color3.fromRGB(190, 190, 190)
-BTN_NOCLIP.TextSize = 16.000
-
-UICorner_7.Parent = BTN_NOCLIP
-
-Visual.Name = "Visual"
-Visual.Parent = ScrollingFrame
-
-BTN_ITEMESP.Name = "BTN_ITEMESP"
-BTN_ITEMESP.Parent = Visual
-BTN_ITEMESP.BackgroundColor3 = Color3.fromRGB(38, 38, 38)
-BTN_ITEMESP.BorderColor3 = Color3.fromRGB(0, 0, 0)
-BTN_ITEMESP.BorderSizePixel = 0
-BTN_ITEMESP.Position = UDim2.new(0.0109999999, 0, 0.0390000008, 0)
-BTN_ITEMESP.Size = UDim2.new(0, 100, 0, 50)
-BTN_ITEMESP.ZIndex = 2
-BTN_ITEMESP.Font = Enum.Font.SciFi
-BTN_ITEMESP.Text = "Item ESP"
-BTN_ITEMESP.TextColor3 = Color3.fromRGB(190, 190, 190)
-BTN_ITEMESP.TextSize = 16.000
-
-UICorner_8.Parent = BTN_ITEMESP
-
-BTN_PLAYERESP.Name = "BTN_PLAYERESP"
-BTN_PLAYERESP.Parent = Visual
-BTN_PLAYERESP.BackgroundColor3 = Color3.fromRGB(38, 38, 38)
-BTN_PLAYERESP.BorderColor3 = Color3.fromRGB(0, 0, 0)
-BTN_PLAYERESP.BorderSizePixel = 0
-BTN_PLAYERESP.Position = UDim2.new(0.155000001, 0, 0.0390000008, 0)
-BTN_PLAYERESP.Size = UDim2.new(0, 100, 0, 50)
-BTN_PLAYERESP.ZIndex = 2
-BTN_PLAYERESP.Font = Enum.Font.SciFi
-BTN_PLAYERESP.Text = "Player ESP"
-BTN_PLAYERESP.TextColor3 = Color3.fromRGB(190, 190, 190)
-BTN_PLAYERESP.TextSize = 16.000
-
-UICorner_9.Parent = BTN_PLAYERESP
-
-BTN_ALWAYSDAY.Name = "BTN_ALWAYSDAY"
-BTN_ALWAYSDAY.Parent = Visual
-BTN_ALWAYSDAY.BackgroundColor3 = Color3.fromRGB(38, 38, 38)
-BTN_ALWAYSDAY.BorderColor3 = Color3.fromRGB(0, 0, 0)
-BTN_ALWAYSDAY.BorderSizePixel = 0
-BTN_ALWAYSDAY.Position = UDim2.new(0.298999995, 0, 0.0390000008, 0)
-BTN_ALWAYSDAY.Size = UDim2.new(0, 100, 0, 50)
-BTN_ALWAYSDAY.ZIndex = 2
-BTN_ALWAYSDAY.Font = Enum.Font.SciFi
-BTN_ALWAYSDAY.Text = "Always Day"
-BTN_ALWAYSDAY.TextColor3 = Color3.fromRGB(190, 190, 190)
-BTN_ALWAYSDAY.TextSize = 16.000
-
-UICorner_10.Parent = BTN_ALWAYSDAY
-
-BTN_FOVCHANGE.Name = "BTN_FOVCHANGE"
-BTN_FOVCHANGE.Parent = Visual
-BTN_FOVCHANGE.BackgroundColor3 = Color3.fromRGB(38, 38, 38)
-BTN_FOVCHANGE.BorderColor3 = Color3.fromRGB(0, 0, 0)
-BTN_FOVCHANGE.BorderSizePixel = 0
-BTN_FOVCHANGE.Position = UDim2.new(0.442999989, 0, 0.0979999974, 0)
-BTN_FOVCHANGE.Size = UDim2.new(0, 100, 0, 50)
-BTN_FOVCHANGE.ZIndex = 2
-BTN_FOVCHANGE.Font = Enum.Font.SciFi
-BTN_FOVCHANGE.Text = "Fov Change"
-BTN_FOVCHANGE.TextColor3 = Color3.fromRGB(190, 190, 190)
-BTN_FOVCHANGE.TextSize = 16.000
-
-UICorner_11.Parent = BTN_FOVCHANGE
-
-FOVInput.Name = "FOVInput"
-FOVInput.Parent = BTN_FOVCHANGE
-FOVInput.BackgroundColor3 = Color3.fromRGB(38, 38, 38)
-FOVInput.BorderColor3 = Color3.fromRGB(0, 0, 0)
-FOVInput.BorderSizePixel = 0
-FOVInput.Position = UDim2.new(1.08287776, 0, 0.187064514, 0)
-FOVInput.Size = UDim2.new(0, 60, 0, 30)
-FOVInput.Font = Enum.Font.Michroma
-FOVInput.Text = "FOV"
-FOVInput.TextColor3 = Color3.fromRGB(190, 190, 190)
-FOVInput.TextSize = 23.000
-
-UICorner_12.Parent = FOVInput
-
-BTN_TIMECHANGE.Name = "BTN_TIMECHANGE"
-BTN_TIMECHANGE.Parent = Visual
-BTN_TIMECHANGE.BackgroundColor3 = Color3.fromRGB(38, 38, 38)
-BTN_TIMECHANGE.BorderColor3 = Color3.fromRGB(0, 0, 0)
-BTN_TIMECHANGE.BorderSizePixel = 0
-BTN_TIMECHANGE.Position = UDim2.new(0.442999989, 0, 0.0390000008, 0)
-BTN_TIMECHANGE.Size = UDim2.new(0, 100, 0, 50)
-BTN_TIMECHANGE.ZIndex = 2
-BTN_TIMECHANGE.Font = Enum.Font.SciFi
-BTN_TIMECHANGE.Text = "Time Change"
-BTN_TIMECHANGE.TextColor3 = Color3.fromRGB(190, 190, 190)
-BTN_TIMECHANGE.TextSize = 16.000
-
-UICorner_13.Parent = BTN_TIMECHANGE
-
-TimeInput.Name = "TimeInput"
-TimeInput.Parent = BTN_TIMECHANGE
-TimeInput.BackgroundColor3 = Color3.fromRGB(38, 38, 38)
-TimeInput.BorderColor3 = Color3.fromRGB(0, 0, 0)
-TimeInput.BorderSizePixel = 0
-TimeInput.Position = UDim2.new(1.08287776, 0, 0.187064514, 0)
-TimeInput.Size = UDim2.new(0, 60, 0, 30)
-TimeInput.Font = Enum.Font.Michroma
-TimeInput.Text = "TIME"
-TimeInput.TextColor3 = Color3.fromRGB(190, 190, 190)
-TimeInput.TextSize = 20.000
-
-UICorner_14.Parent = TimeInput
-
--- Scripts:
-
-local function WRXZMWR_fake_script() -- TAB_VISUAL.VisualSCRIPT 
-	local script = Instance.new('LocalScript', TAB_VISUAL)
-
-	local VisualTab = script.Parent
-	local MainGui = script.Parent.Parent.Parent -- это MENU
-	local ScrollingFrame = MainGui:FindFirstChild("ScrollingFrame")
-	
-	local VisualFolder = ScrollingFrame:FindFirstChild("Visual")
-	local MovementFolder = ScrollingFrame:FindFirstChild("Movement")
-	
-	VisualTab.MouseButton1Click:Connect(function()
-		if VisualFolder and MovementFolder then
-			-- Показываем Visual
-			for _, uiElement in pairs(VisualFolder:GetDescendants()) do
-				if uiElement:IsA("GuiObject") then
-					uiElement.Visible = true
-				end
-			end
-	
-			-- Скрываем Movement
-			for _, uiElement in pairs(MovementFolder:GetDescendants()) do
-				if uiElement:IsA("GuiObject") then
-					uiElement.Visible = false
-				end
-			end
-		end
-	end)
-	
+local function getActualAimPart(character)
+    if not character then return nil end
+    
+    if aimPart == "UpperTorso" then
+        return character:FindFirstChild("UpperTorso") or character:FindFirstChild("Torso") or character:FindFirstChild("HumanoidRootPart")
+    else
+        return character:FindFirstChild(aimPart) or character:FindFirstChild("HumanoidRootPart")
+    end
 end
-coroutine.wrap(WRXZMWR_fake_script)()
-local function GAYCPV_fake_script() -- TAB_MOVEMENT.MovementSCRIPT 
-	local script = Instance.new('LocalScript', TAB_MOVEMENT)
 
-	local VisualTab = script.Parent
-	local MainGui = script.Parent.Parent.Parent -- это MENU
-	local ScrollingFrame = MainGui:FindFirstChild("ScrollingFrame")
-	
-	local VisualFolder = ScrollingFrame:FindFirstChild("Visual")
-	local MovementFolder = ScrollingFrame:FindFirstChild("Movement")
-	
-	VisualTab.MouseButton1Click:Connect(function()
-		if VisualFolder and MovementFolder then
-			-- Показываем Visual
-			for _, uiElement in pairs(VisualFolder:GetDescendants()) do
-				if uiElement:IsA("GuiObject") then
-					uiElement.Visible = false
-				end
-			end
-	
-			-- Скрываем Movement
-			for _, uiElement in pairs(MovementFolder:GetDescendants()) do
-				if uiElement:IsA("GuiObject") then
-					uiElement.Visible = true
-				end
-			end
-		end
-	end)
-	
-end
-coroutine.wrap(GAYCPV_fake_script)()
-local function VJGAU_fake_script() -- BTN_NOCLIP.FUNC_NOCLIP 
-	local script = Instance.new('LocalScript', BTN_NOCLIP)
+local function getClosestPlayer()
+    local closest = nil
+    local shortest = aimFOV
+    local mousePos = UserInputService:GetMouseLocation()
 
-	local UIS = game:GetService("UserInputService")
-	local RunService = game:GetService("RunService")
-	
-	local button = script.Parent
-	
-	local noclip = false
-	local toggleActive = false
-	local connection
-	
-	local function enableNoclip()
-		noclip = true
-		connection = RunService.Stepped:Connect(function()
-			if noclip then
-				local character = game.Players.LocalPlayer.Character
-				if character then
-					for _, part in pairs(character:GetDescendants()) do
-						if part:IsA("BasePart") and part.CanCollide == true then
-							part.CanCollide = false
-						end
-					end
-				end
-			end
-		end)
-	end
-	
-	local function disableNoclip()
-		noclip = false
-		if connection then
-			connection:Disconnect()
-			connection = nil
-		end
-		local character = game.Players.LocalPlayer.Character
-		if character then
-			for _, part in pairs(character:GetDescendants()) do
-				if part:IsA("BasePart") then
-					part.CanCollide = true
-				end
-			end
-		end
-	end
-	
-	button.MouseButton1Click:Connect(function()
-		toggleActive = not toggleActive
-		if toggleActive then
-		else
-			disableNoclip()
-		end
-	end)
-	
-	UIS.InputBegan:Connect(function(input, gpe)
-		if gpe then return end
-		if input.KeyCode == Enum.KeyCode.N and toggleActive then
-			if noclip then
-				disableNoclip()
-			else
-				enableNoclip()
-			end
-		end
-	end)
-	
-	-- Отключаем noclip после смерти, чтобы избежать багов
-	game.Players.LocalPlayer.CharacterAdded:Connect(function(char)
-		disableNoclip()
-	end)
-	task.spawn(function()
-		local btn = script.Parent
-		if not btn:IsA("TextButton") then return end
-	
-		local enabled = false
-	
-		btn.MouseButton1Click:Connect(function()
-			enabled = not enabled
-			btn.TextColor3 = enabled and Color3.fromRGB(31, 181, 94) or Color3.fromRGB(223, 85, 85)
-		end)
-	
-		-- начальный цвет (выключено — красный)
-		btn.TextColor3 = Color3.fromRGB(223, 85, 85)
-	end)
-	
-	
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer and plr.Character then
+            local part = getActualAimPart(plr.Character)
+            if part then
+                local pos, visible = Camera:WorldToViewportPoint(part.Position)
+                if visible then
+                    local dist = (Vector2.new(pos.X, pos.Y) - Vector2.new(mousePos.X, mousePos.Y)).Magnitude
+                    if dist < shortest then
+                        shortest = dist
+                        closest = plr
+                    end
+                end
+            end
+        end
+    end
+    return closest
 end
-coroutine.wrap(VJGAU_fake_script)()
-local function VXANFBS_fake_script() -- BTN_ITEMESP.FUNC_ITEMESP 
-	local script = Instance.new('LocalScript', BTN_ITEMESP)
 
-	local button = script.Parent
-	local itemNames = {
-		"Bond",
-		"RevolverAmmo",
-		"Bandage",
-		"GoldBar",
-		"SilverBar",
-		"RifleAmmo",
-		"Coal",
-		"Snake Oil",
-		"MoneyBag",
-		"Revolver",
-		"Rifle",
-		"ShotGun",
-		"Navy Revolver",
-		"Dynamite",
-		"SheetMetal",
-	}
-	local function addNameTag(item)
-		if item:FindFirstChild("ItemNameGui") then return end
-	
-		local adorneePart = item:FindFirstChildWhichIsA("BasePart")
-		if not adorneePart then return end -- если нет части, не создаём GUI
-	
-		local billboard = Instance.new("BillboardGui")
-		billboard.Name = "ItemNameGui"
-		billboard.Adornee = adorneePart
-		billboard.Size = UDim2.new(0, 100, 0, 40)
-		billboard.StudsOffset = Vector3.new(0, 3, 0)
-		billboard.AlwaysOnTop = true
-		billboard.Parent = item
-	
-		local textLabel = Instance.new("TextLabel")
-		textLabel.Size = UDim2.new(1, 0, 1, 0)
-		textLabel.BackgroundTransparency = 1
-		textLabel.Text = item.Name
-		textLabel.TextColor3 = Color3.new(1, 1, 1)
-		textLabel.TextStrokeTransparency = 0
-		textLabel.Font = Enum.Font.SourceSansBold
-		textLabel.TextScaled = true
-		textLabel.Parent = billboard
-	end
-	local fillColor = Color3.fromRGB(77, 78, 118)
-	local outlineColor = Color3.fromRGB(144, 161, 255)
-	local highlightEnabled = false
-	local function updateHighlights()
-		for _, item in pairs(workspace.RuntimeItems:GetChildren()) do
-			if table.find(itemNames, item.Name) and item:IsA("Model") then
-				addNameTag(item)
-			end
-		end
-	
-		local folder = workspace:FindFirstChild("RuntimeItems")
-		if not folder then return end
-	
-		for _, item in pairs(folder:GetChildren()) do
-			-- Проверяем, есть ли имя этого предмета в списке нужных имён
-			if table.find(itemNames, item.Name) then
-				local existing = item:FindFirstChildOfClass("Highlight")
-				if highlightEnabled then
-					if not existing then
-						local highlight = Instance.new("Highlight")
-						highlight.Adornee = item
-						highlight.FillColor = fillColor
-						highlight.OutlineColor = outlineColor
-						highlight.Parent = item
-					else
-						existing.FillColor = fillColor
-						existing.OutlineColor = outlineColor
-					end
-				else
-					if existing then
-						existing:Destroy()
-					end
-					local billboard = item:FindFirstChild("ItemNameGui")
-					if billboard then
-						billboard:Destroy()
-					end
-				end
-			end
-		end
-	end
-	
-	local RunService = game:GetService("RunService")
-	local elapsed = 0
-	
-	RunService.Heartbeat:Connect(function(dt)
-		if highlightEnabled then
-			elapsed = elapsed + dt
-			if elapsed >= 0.5 then
-				elapsed = 0
-				updateHighlights()
-			end
-		end
-	end)
-	
-	button.MouseButton1Click:Connect(function()
-		highlightEnabled = not highlightEnabled
-		updateHighlights()
-	end)
-	task.spawn(function()
-		local btn = script.Parent
-		if not btn:IsA("TextButton") then return end
-	
-		local enabled = false
-	
-		btn.MouseButton1Click:Connect(function()
-			enabled = not enabled
-			btn.TextColor3 = enabled and Color3.fromRGB(31, 181, 94) or Color3.fromRGB(223, 85, 85)
-		end)
-	
-		-- начальный цвет (выключено — красный)
-		btn.TextColor3 = Color3.fromRGB(223, 85, 85)
-	end)
-	
-	
-end
-coroutine.wrap(VXANFBS_fake_script)()
-local function ISFMBF_fake_script() -- BTN_PLAYERESP.FUNC_PLAYERESP 
-	local script = Instance.new('LocalScript', BTN_PLAYERESP)
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.V and Options.T_Aimbot.Value then
+        aiming = not aiming
+        FOVCircle.Visible = aiming
+    end
+end)
 
-	local RunService = game:GetService("RunService")
-	local playerChamsButton = script.Parent
-	local Players = game:GetService("Players")
-	local player = Players.LocalPlayer
-	
-	local playerHighlightEnabled = false
-	
-	local function addPlayerTag(target)
-		if target:FindFirstChild("Head") and not target.Head:FindFirstChild("PlayerNameGui") then
-			local billboard = Instance.new("BillboardGui")
-			billboard.Name = "PlayerNameGui"
-			billboard.Adornee = target.Head
-			billboard.Size = UDim2.new(0, 100, 0, 40)
-			billboard.StudsOffset = Vector3.new(0, 2.5, 0)
-			billboard.AlwaysOnTop = true
-			billboard.Parent = target.Head
-	
-			local textLabel = Instance.new("TextLabel")
-			textLabel.Size = UDim2.new(1, 0, 1, 0)
-			textLabel.BackgroundTransparency = 1
-			textLabel.Text = target.Name
-			textLabel.TextColor3 = Color3.new(1, 1, 1)
-			textLabel.TextStrokeTransparency = 0
-			textLabel.Font = Enum.Font.SourceSansBold
-			textLabel.TextScaled = true
-			textLabel.Parent = billboard
-		end
-	end
-	
-	local function updatePlayerChams()
-		for _, plr in pairs(Players:GetPlayers()) do
-			if plr ~= player and plr.Character then
-				local char = plr.Character
-				local highlight = char:FindFirstChildOfClass("Highlight")
-	
-				if playerHighlightEnabled then
-					addPlayerTag(char)
-					if not highlight then
-						local h = Instance.new("Highlight")
-						h.Adornee = char
-						h.FillColor = Color3.fromRGB(77, 78, 118)
-						h.OutlineColor = Color3.fromRGB(144, 161, 255)
-						h.Parent = char
-					end
-				else
-					if highlight then highlight:Destroy() end
-					local head = char:FindFirstChild("Head")
-					if head and head:FindFirstChild("PlayerNameGui") then
-						head.PlayerNameGui:Destroy()
-					end
-				end
-			end
-		end
-	end
-	
-	RunService.Heartbeat:Connect(function(dt)
-		if playerHighlightEnabled then
-			updatePlayerChams()
-		end
-	end)
-	
-	playerChamsButton.MouseButton1Click:Connect(function()
-		playerHighlightEnabled = not playerHighlightEnabled
-		updatePlayerChams()
-	end)
-	task.spawn(function()
-		local btn = script.Parent
-		if not btn:IsA("TextButton") then return end
-	
-		local enabled = false
-	
-		btn.MouseButton1Click:Connect(function()
-			enabled = not enabled
-			btn.TextColor3 = enabled and Color3.fromRGB(31, 181, 94) or Color3.fromRGB(223, 85, 85)
-		end)
-	
-		-- начальный цвет (выключено — красный)
-		btn.TextColor3 = Color3.fromRGB(223, 85, 85)
-	end)
-	
-end
-coroutine.wrap(ISFMBF_fake_script)()
-local function EMLLWBM_fake_script() -- BTN_ALWAYSDAY.FUNC_ALWAYSDAY 
-	local script = Instance.new('LocalScript', BTN_ALWAYSDAY)
+RunService.RenderStepped:Connect(function()
+    if not aimbotEnabled or not aiming then return end
 
-	local btn = script.Parent
-	local run = game:GetService("RunService")
-	local active = false
-	local conn
-	
-	btn.MouseButton1Click:Connect(function()
-		active = not active
-	
-		if active then
-			conn = run.Heartbeat:Connect(function()
-				if game.Lighting.ClockTime ~= 14 then
-					game.Lighting.ClockTime = 14
-				end
-			end)
-		else
-			if conn then conn:Disconnect() end
-		end
-	end)
-	local textbox = btn.Parent:FindFirstChild("TextBox")
-	local cam = workspace.CurrentCamera
-	
-	btn.MouseButton1Click:Connect(function()
-		local fov = tonumber(textbox.Text)
-		if fov then
-			cam.FieldOfView = math.clamp(fov, 1, 120)
-		end
-	end)
-	task.spawn(function()
-		local btn = script.Parent
-		if not btn:IsA("TextButton") then return end
-	
-		local enabled = false
-	
-		btn.MouseButton1Click:Connect(function()
-			enabled = not enabled
-			btn.TextColor3 = enabled and Color3.fromRGB(31, 181, 94) or Color3.fromRGB(223, 85, 85)
-		end)
-	
-		-- начальный цвет (выключено — красный)
-		btn.TextColor3 = Color3.fromRGB(223, 85, 85)
-	end)
-	
-end
-coroutine.wrap(EMLLWBM_fake_script)()
-local function ONHT_fake_script() -- BTN_FOVCHANGE.FUNC_FOVCHANGE 
-	local script = Instance.new('LocalScript', BTN_FOVCHANGE)
+    local mousePos = UserInputService:GetMouseLocation()
+    FOVCircle.Position = mousePos
 
-	local btn = script.Parent
-	local textbox = btn:FindFirstChild("FOVInput")
-	local cam = workspace.Camera
-	
-	btn.MouseButton1Click:Connect(function()
-		local fov = tonumber(textbox.Text)
-		if fov then
-			cam.FieldOfView = math.clamp(fov, 1, 120)
-		end
-	end)
-	
-end
-coroutine.wrap(ONHT_fake_script)()
-local function ZBVRPRJ_fake_script() -- BTN_TIMECHANGE.FUNC_TIMECHANGE 
-	local script = Instance.new('LocalScript', BTN_TIMECHANGE)
+    local target = getClosestPlayer()
+    if target and target.Character then
+        local part = getActualAimPart(target.Character)
+        if part then
+            local distance = (Camera.CFrame.Position - part.Position).Magnitude
+            local dynamicPrediction = distance / 1000 * aimPrediction
+            local predictedPos = part.Position + part.Velocity * dynamicPrediction
+            local aimPos = Camera:WorldToViewportPoint(predictedPos)
+            local delta = (Vector2.new(aimPos.X, aimPos.Y) - mousePos) * aimSmoothness
+            mousemoverel(delta.X * aimStrength, delta.Y * aimStrength)
+        end
+    end
+end)
 
-	local btn = script.Parent
-	local textbox = btn:FindFirstChild("TimeInput")
-	local time = game.Lighting
-	
-	btn.MouseButton1Click:Connect(function()
-		local textbox = tonumber(textbox.Text)
-		if time then
-			time.ClockTime = textbox
-		end
-	end)
-	
+local function createESP(player)
+    if ESPPlayers[player] then return end
+    
+    local esp = {
+        name = Drawing.new("Text"),
+        distance = Drawing.new("Text"),
+        healthBar = Drawing.new("Line"),
+        healthText = Drawing.new("Text"),
+        box = Drawing.new("Quad")
+    }
+    
+    ESPPlayers[player] = esp
+    
+    esp.name.Visible = false
+    esp.name.Center = true
+    esp.name.Outline = true
+    esp.name.Font = 2
+    esp.name.Size = 13
+    
+    esp.distance.Visible = false
+    esp.distance.Center = true
+    esp.distance.Outline = true
+    esp.distance.Font = 2
+    esp.distance.Size = 13
+    
+    esp.healthBar.Visible = false
+    esp.healthBar.Thickness = 1
+    
+    esp.healthText.Visible = false
+    esp.healthText.Center = true
+    esp.healthText.Outline = true
+    esp.healthText.Font = 2
+    esp.healthText.Size = 13
+    
+    esp.box.Visible = false
+    esp.box.Thickness = 1
+    esp.box.Filled = false
+    
+    return esp
 end
-coroutine.wrap(ZBVRPRJ_fake_script)()
-local function ZLVH_fake_script() -- ScreenGui.MENUKEYBIND 
-	local script = Instance.new('LocalScript', ScreenGui)
 
-	local UIS = game:GetService("UserInputService")
-	local player = game.Players.LocalPlayer
-	local gui = player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui")
-	
-		UIS.InputBegan:Connect(function(input, gpe)
-			if gpe then return end
-			if input.KeyCode == Enum.KeyCode.U then
-				gui.Enabled = not gui.Enabled
-			end
-		end)
+local function updateESP()
+    if not ESPEnabled then return end
+    
+    for player, esp in pairs(ESPPlayers) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local rootPart = player.Character.HumanoidRootPart
+            local head = player.Character:FindFirstChild("Head")
+            local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+            
+            if rootPart and head then
+                local position, onScreen = Camera:WorldToViewportPoint(rootPart.Position)
+                
+                if onScreen then
+                    local distance = (rootPart.Position - Camera.CFrame.Position).Magnitude
+                    if distance > ESPDistanceMax then
+                        esp.name.Visible = false
+                        esp.distance.Visible = false
+                        esp.healthBar.Visible = false
+                        esp.healthText.Visible = false
+                        esp.box.Visible = false
+                        continue
+                    end
+                    
+                    local headPos = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
+                    local rootPos = Camera:WorldToViewportPoint(rootPart.Position - Vector3.new(0, 3, 0))
+                    
+                    local height = math.abs(headPos.Y - rootPos.Y)
+                    local width = height * 0.5
+                    
+                    -- Box ESP
+                    esp.box.PointA = Vector2.new(headPos.X - width, headPos.Y)
+                    esp.box.PointB = Vector2.new(headPos.X + width, headPos.Y)
+                    esp.box.PointC = Vector2.new(rootPos.X + width, rootPos.Y)
+                    esp.box.PointD = Vector2.new(rootPos.X - width, rootPos.Y)
+                    esp.box.Color = Color3.fromRGB(255, 255, 255)
+                    esp.box.Visible = ESPEnabled
+                    
+                    -- Name ESP
+                    esp.name.Position = Vector2.new(headPos.X, headPos.Y - 20)
+                    esp.name.Text = player.Name
+                    esp.name.Color = Color3.fromRGB(255, 255, 255)
+                    esp.name.Visible = ESPNameEnabled and ESPEnabled
+                    
+                    -- Distance ESP
+                    esp.distance.Position = Vector2.new(headPos.X, rootPos.Y + 10)
+                    esp.distance.Text = tostring(math.floor(distance)) .. "m"
+                    esp.distance.Color = Color3.fromRGB(255, 255, 255)
+                    esp.distance.Visible = ESPDistanceEnabled and ESPEnabled
+                    
+                    -- Health ESP
+                    if humanoid then
+                        local healthPercent = humanoid.Health / humanoid.MaxHealth
+                        local healthColor = ESPHealthGradientStart:Lerp(ESPHealthGradientEnd, healthPercent)
+                        
+                        -- Health Bar
+                        esp.healthBar.From = Vector2.new(rootPos.X - width - 5, rootPos.Y)
+                        esp.healthBar.To = Vector2.new(rootPos.X - width - 5, rootPos.Y - height * healthPercent)
+                        esp.healthBar.Color = healthColor
+                        esp.healthBar.Visible = ESPHealthEnabled and ESPEnabled
+                        
+                        -- Health Text
+                        esp.healthText.Position = Vector2.new(rootPos.X - width - 15, rootPos.Y - height * healthPercent)
+                        esp.healthText.Text = tostring(math.floor(humanoid.Health))
+                        esp.healthText.Color = healthColor
+                        esp.healthText.Visible = ESPHealthEnabled and ESPEnabled
+                    end
+                else
+                    esp.name.Visible = false
+                    esp.distance.Visible = false
+                    esp.healthBar.Visible = false
+                    esp.healthText.Visible = false
+                    esp.box.Visible = false
+                end
+            else
+                esp.name.Visible = false
+                esp.distance.Visible = false
+                esp.healthBar.Visible = false
+                esp.healthText.Visible = false
+                esp.box.Visible = false
+            end
+        else
+            esp.name.Visible = false
+            esp.distance.Visible = false
+            esp.healthBar.Visible = false
+            esp.healthText.Visible = false
+            esp.box.Visible = false
+        end
+    end
 end
-coroutine.wrap(ZLVH_fake_script)()
+
+local SectionESP = Tabs.Visuals:AddSection("ESP Settings")
+
+SectionESP:AddToggle("T_ESP", {
+    Title = "Enable ESP",
+    Default = false
+}):OnChanged(function(val)
+    ESPEnabled = val
+    if not val then
+        for _, esp in pairs(ESPPlayers) do
+            esp.name.Visible = false
+            esp.distance.Visible = false
+            esp.healthBar.Visible = false
+            esp.healthText.Visible = false
+            esp.box.Visible = false
+        end
+    end
+end)
+
+SectionESP:AddToggle("T_ESPNames", {
+    Title = "Show Names",
+    Default = false
+}):OnChanged(function(val)
+    ESPNameEnabled = val
+end)
+
+SectionESP:AddToggle("T_ESPDistance", {
+    Title = "Show Distance",
+    Default = false
+}):OnChanged(function(val)
+    ESPDistanceEnabled = val
+end)
+
+SectionESP:AddToggle("T_ESPHealth", {
+    Title = "Show Health",
+    Default = false
+}):OnChanged(function(val)
+    ESPHealthEnabled = val
+end)
+
+SectionESP:AddSlider("S_ESPDistance", {
+    Title = "Max Distance",
+    Description = "Maximum ESP render distance",
+    Default = 1000,
+    Min = 50,
+    Max = 5000,
+    Rounding = 0
+}):OnChanged(function(val)
+    ESPDistanceMax = val
+end)
+
+SectionESP:AddColorpicker("CP_ESPHealthStart", {
+    Title = "Health Start Color",
+    Default = Color3.fromRGB(255, 0, 0)
+}):OnChanged(function(val)
+    ESPHealthGradientStart = val
+end)
+
+SectionESP:AddColorpicker("CP_ESPHealthEnd", {
+    Title = "Health End Color",
+    Default = Color3.fromRGB(0, 255, 0)
+}):OnChanged(function(val)
+    ESPHealthGradientEnd = val
+end)
+
+for _, player in ipairs(Players:GetPlayers()) do
+    if player ~= LocalPlayer then
+        createESP(player)
+    end
+end
+
+Players.PlayerAdded:Connect(function(player)
+    createESP(player)
+    
+    player.CharacterAdded:Connect(function(character)
+        task.wait(1)
+        if ESPEnabled then
+            createESP(player)
+        end
+    end)
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    if ESPPlayers[player] then
+        for _, drawing in pairs(ESPPlayers[player]) do
+            drawing:Remove()
+        end
+        ESPPlayers[player] = nil
+    end
+end)
+
+RunService.RenderStepped:Connect(updateESP)
+
+local CP_ChamsFill = Tabs.Visuals:AddColorpicker("ColorpickerFill", {
+    Title = "Chams Fill Color",
+    Default = Color3.fromRGB(105, 76, 175)
+})
+CP_ChamsFill:OnChanged(function()
+    ChamsFillColor = CP_ChamsFill.Value
+end)
+
+local CP_ChamsOutline = Tabs.Visuals:AddColorpicker("ColorpickerOutline", {
+    Title = "Chams Outline Color",
+    Default = Color3.fromRGB(150, 138, 224)
+})
+CP_ChamsOutline:OnChanged(function()
+    ChamsOutlineColor = CP_ChamsOutline.Value
+end)
+
+local function applyChamsToPlayer(plr)
+    if plr ~= LocalPlayer and plr.Character then
+        local highlight = plr.Character:FindFirstChild("Chams")
+        if highlight then
+            highlight.Enabled = true
+        else
+            local highlight = Instance.new("Highlight")
+            highlight.Name = "Chams"
+            highlight.FillColor = ChamsFillColor or Color3.fromRGB(0, 255, 140)
+            highlight.OutlineColor = ChamsOutlineColor or Color3.fromRGB(0, 255, 140)
+            highlight.FillTransparency = 0.3
+            highlight.OutlineTransparency = 0
+            highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+            highlight.Adornee = plr.Character
+            highlight.Parent = plr.Character
+        end
+    end
+end
+
+local function removeChamsFromPlayer(plr)
+    if plr.Character then
+        local highlight = plr.Character:FindFirstChild("Chams")
+        if highlight then
+            highlight:Destroy()
+        end
+    end
+end
+
+local function updateAllChams()
+    for _, plr in pairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer then
+            removeChamsFromPlayer(plr)
+            applyChamsToPlayer(plr)
+        end
+    end
+end
+
+local function updateChamsColors()
+    for _, plr in pairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer and plr.Character then
+            local highlight = plr.Character:FindFirstChild("Chams")
+            if highlight then
+                highlight.FillColor = ChamsFillColor or Color3.fromRGB(0, 255, 140)
+                highlight.OutlineColor = ChamsOutlineColor or Color3.fromRGB(0, 255, 140)
+            end
+        end
+    end
+end
+
+local T_Chams = Tabs.Visuals:AddToggle("T_Chams", {Title = "Chams", Default = false})
+T_Chams:OnChanged(function(enabled)
+    ChamsUpdaterRunning = enabled
+
+    if enabled then
+        for _, plr in pairs(Players:GetPlayers()) do
+            applyChamsToPlayer(plr)
+            local conn = plr.CharacterAdded:Connect(function()
+                task.wait(1)
+                applyChamsToPlayer(plr)
+            end)
+            CharacterConnections[plr] = conn
+        end
+
+        PlayerConnection = Players.PlayerAdded:Connect(function(plr)
+            local conn = plr.CharacterAdded:Connect(function()
+                task.wait(1)
+                applyChamsToPlayer(plr)
+            end)
+            CharacterConnections[plr] = conn
+        end)
+
+        task.spawn(function()
+            while ChamsUpdaterRunning do
+                updateChamsColors()
+                task.wait(0.5)
+            end
+        end)
+    else
+        for _, plr in pairs(Players:GetPlayers()) do
+            removeChamsFromPlayer(plr)
+            if CharacterConnections[plr] then
+                CharacterConnections[plr]:Disconnect()
+                CharacterConnections[plr] = nil
+            end
+        end
+        if PlayerConnection then
+            PlayerConnection:Disconnect()
+            PlayerConnection = nil
+        end
+    end
+end)
+
+-- SaveManager
+SaveManager:SetLibrary(Fluent)
+InterfaceManager:SetLibrary(Fluent)
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({})
+InterfaceManager:SetFolder("FluentScriptHub")
+SaveManager:SetFolder("FluentScriptHub/specific-game")
+InterfaceManager:BuildInterfaceSection(Tabs.Settings)
+SaveManager:BuildConfigSection(Tabs.Settings)
+Window:SelectTab(1)
+
+Fluent:Notify({
+    Title = "TRIVIAL",
+    Content = "The script has been injected.",
+    Duration = 3
+})
+
+SaveManager:LoadAutoloadConfig()
